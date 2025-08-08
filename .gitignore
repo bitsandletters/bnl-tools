@@ -39,3 +39,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Font Awesome authentication (local only)
+.npmrc.local
+
+# Brand fonts package (private, contains commercial fonts)
+../bnl-brand-fonts/

@@ -1,0 +1,83 @@
+/* ABOUTME: Theme CSS variables for BNL brand colors and dark theme
+   ABOUTME: Uses Tailwind's stone scale for neutrals with brand red and blue accents */
+
+:root {
+  /* Text colors based on Tailwind's stone scale */
+  --app-color-text-loud: #fafaf9;        /* stone-50 - Headings, bold text */
+  --app-color-text-normal: #e7e5e4;      /* stone-200 - Regular body text */
+  --app-color-text-inputs: #e7e5e4;      /* stone-200 - Form input text */
+  --app-color-text-quiet: #a8a29e;       /* stone-400 - Captions, low-emphasis */
+  --app-color-text-muted: #78716c;       /* stone-500 - Even lower emphasis */
+  --app-color-text-placeholder: #57534e; /* stone-600 - Input placeholders */
+  
+  /* Backgrounds */
+  --app-color-bg-primary: #292524;       /* stone-800 - Main content backgrounds */
+  --app-color-bg-secondary: #1c1917;     /* stone-900 - Page background */
+  --app-color-bg-tertiary: #44403c;      /* stone-700 - Subtle backgrounds */
+  
+  /* Borders */
+  --app-color-border-normal: #57534e;    /* stone-600 - Regular borders */
+  --app-color-border-light: #78716c;     /* stone-500 - Lighter borders */
+  --app-color-border-dark: #44403c;      /* stone-700 - Emphasis borders */
+  
+  /* Interactive states */
+  --app-color-hover-text: #d6d3d1;       /* stone-300 - Hover state for text */
+  --app-color-disabled-text: #78716c;    /* stone-500 - Disabled state */
+  
+  /* BNL Brand colors */
+  --app-color-primary: #FC571A;          /* BNL Brand Red */
+  --app-color-primary-hover: #e64a1a;    /* Darker red for hover */
+  --app-color-secondary: #5875CB;        /* BNL Brand Blue */
+  --app-color-secondary-hover: #4a6bb8;  /* Darker blue for hover */
+  --app-color-success: #10b981;          /* green-500 */
+  --app-color-success-hover: #059669;    /* green-600 */
+  --app-color-danger: #ef4444;           /* red-500 */
+  --app-color-danger-hover: #dc2626;     /* red-600 */
+  --app-color-warning: #f59e0b;          /* amber-500 - Warning backgrounds */
+  --app-color-warning-bg: #451a03;       /* amber-950 - Warning background */
+}
+
+/* Utility classes for text colors */
+.text-loud { color: var(--app-color-text-loud); }
+.text-normal { color: var(--app-color-text-normal); }
+.text-quiet { color: var(--app-color-text-quiet); }
+.text-muted { color: var(--app-color-text-muted); }
+
+/* Utility classes for backgrounds */
+.bg-primary { background-color: var(--app-color-bg-primary); }
+.bg-secondary { background-color: var(--app-color-bg-secondary); }
+.bg-tertiary { background-color: var(--app-color-bg-tertiary); }
+
+/* Utility classes for borders */
+.border-normal { border-color: var(--app-color-border-normal); }
+.border-light { border-color: var(--app-color-border-light); }
+.border-dark { border-color: var(--app-color-border-dark); }
+
+/* Custom placeholder styling using CSS variables */
+input::placeholder,
+textarea::placeholder {
+  color: var(--app-color-text-placeholder);
+  opacity: 1; /* Override browser defaults */
+}
+
+/* Ensure inputs use the correct text color */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+input[type="tel"],
+input[type="url"],
+input[type="search"],
+textarea,
+select {
+  color: var(--app-color-text-inputs);
+}
+
+/* Focus states for form elements */
+input:focus,
+textarea:focus,
+select:focus {
+  outline-color: var(--app-color-secondary);
+  border-color: var(--app-color-secondary);
+  box-shadow: 0 0 0 2px rgba(88, 117, 203, 0.2); /* Secondary blue with opacity */
+}
