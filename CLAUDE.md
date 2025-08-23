@@ -1,6 +1,10 @@
-# Issue tracking
-
 **Linear project:** https://linear.app/bitsandletters/project/design-tools-suite-10d956613765
+
+
+# Running and testing this project
+
+- I will almost always have the dev server running, so assume that it is. Don't try to run the dev server until you've tried to test something and hit a problem that suggests it's not running.
+- Linting is not set up, don't worry about it.
 
 
 # Styling
