@@ -14,8 +14,9 @@ A modern web application for generating Tailwind-compatible color scales using t
 
 ## Tech Stack
 
-- **Runtime & Package Manager**: [Bun](https://bun.sh/)
+- **Package Manager**: [pnpm](https://pnpm.io/)
 - **Framework**: [Next.js 15](https://nextjs.org/) with App Router
+- **Testing**: [Vitest](https://vitest.dev/)
 - **Language**: TypeScript
 - **Styling**: [Tailwind CSS v4.1.x](https://tailwindcss.com/)
 - **Color Processing**: [colorjs.io](https://colorjs.io/) for Okhsl color space
@@ -35,12 +36,12 @@ A modern web application for generating Tailwind-compatible color scales using t
 
 2. **Install dependencies**:
    ```bash
-   bun install
+   pnpm install
    ```
 
 3. **Start the development server**:
    ```bash
-   bun dev
+   pnpm dev
    ```
 
 4. **Open your browser** to [http://localhost:3000](http://localhost:3000)
@@ -78,16 +79,19 @@ Color scales are generated using Matt Strom's approach from [Generating Color Pa
 ./scripts/setup-env.sh
 
 # Install dependencies
-bun install
+pnpm install
 
 # Run development server
-bun dev
+pnpm dev
 
 # Build for production
-bun run build
+pnpm build
 
 # Start production server
-bun start
+pnpm start
+
+# Run tests
+pnpm test
 ```
 
 ## Deployment
