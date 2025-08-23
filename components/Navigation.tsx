@@ -1,5 +1,5 @@
-// ABOUTME: Navigation component for the multi-tool interface
-// ABOUTME: Includes BNL branding and navigation between different tools
+// ABOUTME: Navigation component for the color tool interface
+// ABOUTME: Includes BNL branding and navigation
 
 'use client';
 
@@ -7,11 +7,8 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';
 
-const tools = [
-  { name: 'Color Scales', path: '/color-scales' },
-  { name: 'Modular Scale', path: '/modular-scale' },
-  { name: 'Typography', path: '/typography' },
-  { name: 'Spacing', path: '/spacing' },
+const tools: Array<{ name: string; path: string }> = [
+  // Color Scales navigation item removed for now
 ];
 
 export default function Navigation() {
@@ -35,7 +32,7 @@ export default function Navigation() {
                   Bits&amp;Letters
                 </span>
                 <span className="font-stringer font-light ml-2">
-                  Tools
+                  Color Tool
                 </span>
               </div>
             </Link>
