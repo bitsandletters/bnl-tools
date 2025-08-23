@@ -1,7 +1,7 @@
 // ABOUTME: Tests for color utility functions
 // ABOUTME: Validates color scale generation and CSS export functionality
 
-import { describe, expect, test } from 'bun:test';
+import { describe, expect, test } from 'vitest';
 import { generateColorScale, exportAsCSSVariables, parseColor } from './colorUtils';
 
 describe('Color Utilities', () => {
@@ -32,7 +32,13 @@ describe('Color Utilities', () => {
 
   describe('generateColorScale', () => {
     test('should generate a complete color scale', () => {
-      const scale = generateColorScale('#3b82f6', 'blue', 0, 0);
+      const scale = generateColorScale({
+        id: 'scale-1',
+        name: 'blue',
+        keyColor: '#3b82f6',
+        hueShift: 0,
+        chromaShift: 0
+      });
       
       expect(scale.name).toBe('blue');
       expect(scale.keyColor).toBe('#3b82f6');
@@ -55,7 +61,11 @@ describe('Color Utilities', () => {
     });
 
     test('should generate lighter shades with higher luminance', () => {
-      const scale = generateColorScale('#3b82f6', 'blue');
+      const scale = generateColorScale({
+        id: 'scale-1',
+        name: 'blue',
+        keyColor: '#3b82f6'
+      });
       
       expect(scale.shades['50'].luminance).toBeGreaterThan(scale.shades['100'].luminance);
       expect(scale.shades['100'].luminance).toBeGreaterThan(scale.shades['200'].luminance);
@@ -65,9 +75,21 @@ describe('Color Utilities', () => {
     });
 
     test('should handle different color formats', () => {
-      const hexScale = generateColorScale('#ff0000', 'red-hex');
-      const rgbScale = generateColorScale('rgb(255, 0, 0)', 'red-rgb');
-      const namedScale = generateColorScale('red', 'red-named');
+      const hexScale = generateColorScale({
+        id: 'scale-1',
+        name: 'red-hex',
+        keyColor: '#ff0000'
+      });
+      const rgbScale = generateColorScale({
+        id: 'scale-2',
+        name: 'red-rgb',
+        keyColor: 'rgb(255, 0, 0)'
+      });
+      const namedScale = generateColorScale({
+        id: 'scale-3',
+        name: 'red-named',
+        keyColor: 'red'
+      });
       
       expect(hexScale.shades['500']).toBeDefined();
       expect(rgbScale.shades['500']).toBeDefined();
@@ -77,7 +99,11 @@ describe('Color Utilities', () => {
 
   describe('exportAsCSSVariables', () => {
     test('should export single scale as CSS variables', () => {
-      const scale = generateColorScale('#3b82f6', 'primary');
+      const scale = generateColorScale({
+        id: 'scale-1',
+        name: 'primary',
+        keyColor: '#3b82f6'
+      });
       const css = exportAsCSSVariables([scale]);
       
       expect(css).toContain(':root {');
@@ -88,8 +114,16 @@ describe('Color Utilities', () => {
     });
 
     test('should export multiple scales', () => {
-      const scale1 = generateColorScale('#3b82f6', 'primary');
-      const scale2 = generateColorScale('#ef4444', 'danger');
+      const scale1 = generateColorScale({
+        id: 'scale-1',
+        name: 'primary',
+        keyColor: '#3b82f6'
+      });
+      const scale2 = generateColorScale({
+        id: 'scale-2',
+        name: 'danger',
+        keyColor: '#ef4444'
+      });
       const css = exportAsCSSVariables([scale1, scale2]);
       
       expect(css).toContain('--color-primary-500:');
@@ -97,7 +131,11 @@ describe('Color Utilities', () => {
     });
 
     test('should apply prefix when provided', () => {
-      const scale = generateColorScale('#3b82f6', 'primary');
+      const scale = generateColorScale({
+        id: 'scale-1',
+        name: 'primary',
+        keyColor: '#3b82f6'
+      });
       const css = exportAsCSSVariables([scale], 'brand');
       
       expect(css).toContain('--color-brand-primary-50:');
@@ -106,7 +144,11 @@ describe('Color Utilities', () => {
     });
 
     test('should handle empty prefix correctly', () => {
-      const scale = generateColorScale('#3b82f6', 'primary');
+      const scale = generateColorScale({
+        id: 'scale-1',
+        name: 'primary',
+        keyColor: '#3b82f6'
+      });
       const css = exportAsCSSVariables([scale], '');
       
       expect(css).toContain('--color-primary-50:');
