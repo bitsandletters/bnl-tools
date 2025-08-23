@@ -4,8 +4,8 @@ import "./theme.css";
 import Navigation from "@/components/Navigation";
 
 export const metadata: Metadata = {
-  title: "Bits&Letters Tools",
-  description: "Professional design tools for color scales, typography, and spacing",
+  title: "Bits&Letters Color Tool",
+  description: "Professional color scale generator for creating consistent, accessible color systems",
   icons: {
     icon: '/favicon.svg',
   },

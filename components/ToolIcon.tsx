@@ -4,23 +4,15 @@
 'use client';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { 
-  faPalette, 
-  faRuler, 
-  faFont, 
-  faDistributeSpacingHorizontal 
-} from '@awesome.me/kit-dafe0a6e6d/icons/sharp/regular';
+import { faPalette } from '@awesome.me/kit-dafe0a6e6d/icons/sharp/regular';
 
 interface ToolIconProps {
-  tool: 'color-scales' | 'modular-scale' | 'typography' | 'spacing';
+  tool: 'color-scales';
   className?: string;
 }
 
 const iconMap = {
-  'color-scales': faPalette,
-  'modular-scale': faRuler,
-  'typography': faFont,
-  'spacing': faDistributeSpacingHorizontal,
+  'color-scales': faPalette
 };
 
 export default function ToolIcon({ tool, className = '' }: ToolIconProps) {

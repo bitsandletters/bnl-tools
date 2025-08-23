@@ -1,5 +1,5 @@
-// ABOUTME: Home page for Bits & Letters Tools
-// ABOUTME: Landing page showcasing all available design tools
+// ABOUTME: Home page for Bits & Letters Color Tool
+// ABOUTME: Landing page for the color scale generator tool
 
 'use client';
 
@@ -15,27 +15,6 @@ const tools = [
     path: '/color-scales',
     status: 'ready',
     tool: 'color-scales' as const
-  },
-  {
-    name: 'Modular Scale',
-    description: 'Generate typography and spacing scales using modular ratios',
-    path: '/modular-scale',
-    status: 'coming-soon',
-    tool: 'modular-scale' as const
-  },
-  {
-    name: 'Typography',
-    description: 'Generate consistent font sizes, line heights, and letter spacing',
-    path: '/typography',
-    status: 'coming-soon',
-    tool: 'typography' as const
-  },
-  {
-    name: 'Spacing',
-    description: 'Generate consistent spacing scales for margins, padding, and gaps',
-    path: '/spacing',
-    status: 'coming-soon',
-    tool: 'spacing' as const
   }
 ];
 
@@ -55,15 +34,15 @@ export default function HomePage() {
         {/* Hero Section */}
         <div className="text-center mb-16">
           <h1 className="text-5xl font-bold mb-6" style={{ color: 'var(--app-color-text-loud)' }}>
-            Bits & Letters Tools
+            Bits & Letters Color Tool
           </h1>
           <p className="text-xl max-w-3xl mx-auto" style={{ color: 'var(--app-color-text-normal)' }}>
-            Professional design tools for creating consistent color scales, typography, and spacing systems.
+            Professional color scale generator for creating consistent, accessible color systems using Okhsl color space.
           </p>
         </div>
 
-        {/* Tools Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
+        {/* Tool Card */}
+        <div className="max-w-2xl mx-auto">
           {tools.map((tool) => (
             <Link
               key={tool.path}
