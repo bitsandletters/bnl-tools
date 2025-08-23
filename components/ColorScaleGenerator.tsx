@@ -3,7 +3,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useColorScaleStore } from '@/lib/colorScaleStore';
 import ColorScaleEditor from './ColorScaleEditor';
 import CSSExportSidebar from './CSSExportSidebar';
@@ -16,6 +16,7 @@ import { Button } from '@/components/catalyst/button';
 export default function ColorScaleGenerator() {
   const [copiedURL, setCopiedURL] = useState(false);
   const [isExportOpen, setIsExportOpen] = useState(false);
+  const [isAppReady, setIsAppReady] = useState(false);
   
   const {
     scales,
@@ -35,6 +36,48 @@ export default function ColorScaleGenerator() {
     setCopiedURL(true);
     setTimeout(() => setCopiedURL(false), 2000);
   };
+
+  // Initialize app after hydration
+  useEffect(() => {
+    // Check if we have existing scales from URL state
+    if (scales && scales.length > 0) {
+      // Existing scales loaded, app is ready
+      setIsAppReady(true);
+    } else {
+      // No existing scales, check if we should add a starter
+      const hasUrlState = window.location.hash && window.location.hash.length > 1;
+      if (!hasUrlState) {
+        // Add a starter color scale
+        addColorScale();
+        // Don't set app ready here - wait for the scale to be added
+      } else {
+        // We have URL state but it hasn't loaded yet, or it's empty
+        // Set app ready since we're not adding a starter
+        setIsAppReady(true);
+      }
+    }
+  }, []); // Only run once after mount/hydration
+
+  // Watch for scale changes to mark app as ready after starter is added
+  useEffect(() => {
+    if (scales && scales.length > 0 && !isAppReady) {
+      setIsAppReady(true);
+    }
+  }, [scales, isAppReady]);
+
+  // Show loading state until app is ready
+  if (!isAppReady) {
+    return (
+      <div className="min-h-screen p-8 flex items-center justify-center" style={{ backgroundColor: 'var(--app-color-bg-secondary)' }}>
+        <div className="text-center">
+          <div className="animate-pulse">
+            <div className="h-8 w-48 rounded mx-auto mb-4" style={{ backgroundColor: 'var(--app-color-bg-primary)' }}></div>
+            <div className="h-4 w-32 rounded mx-auto" style={{ backgroundColor: 'var(--app-color-bg-primary)' }}></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen p-8" style={{ backgroundColor: 'var(--app-color-bg-secondary)' }}>
