@@ -77,7 +77,7 @@ export function useUndoRedo<T>(
   }, [undo, redo]);
   
   return {
-    state: history[currentIndex],
+    state: history[currentIndex] || initialState,
     setState,
     undo,
     redo,

@@ -11,13 +11,20 @@
   "dependencies": {
     "@awesome.me/kit-dafe0a6e6d": "^1.0.4",
     "@bitsandletters/brand-fonts": "latest",
+    "@floating-ui/react": "^0.27.15",
     "@fortawesome/fontawesome-svg-core": "^7.0.0",
     "@fortawesome/react-fontawesome": "^0.2.3",
+    "@headlessui/react": "^2.2.7",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
     "colorjs.io": "^0.6.0-alpha.1",
+    "framer-motion": "^12.23.12",
     "lz-string": "^1.5.0",
     "next": "15.4.5",
     "react": "19.1.0",
-    "react-dom": "19.1.0"
+    "react-dom": "19.1.0",
+    "tailwind-merge": "^3.3.1",
+    "zustand": "^5.0.7"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

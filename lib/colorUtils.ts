@@ -3,35 +3,10 @@
 
 import Color from 'colorjs.io';
 import 'colorjs.io/fn';
+import { ColorScale, ColorScaleData, ColorShade, WCAGGrade } from './types';
 
-export interface WCAGGrade {
-  ratio: number;
-  AA: boolean;      // 4.5:1 for normal text
-  AALarge: boolean; // 3:1 for large text (AA+)
-  AAA: boolean;     // 7:1 for normal text
-  AAALarge: boolean; // 4.5:1 for large text (AAA+)
-}
-
-export interface ColorScale {
-  id: string;
-  name: string;
-  keyColor: string;
-  hueShift?: number;
-  chromaShift?: number;
-  shades: {
-    [key: string]: {
-      hex: string;
-      rgb: string;
-      hsl: string;
-      okhsl: { h: number; s: number; l: number };
-      luminance: number;
-      contrastWhite: WCAGGrade;
-      contrastBlack: WCAGGrade;
-      apcaWhite: number;
-      apcaBlack: number;
-    };
-  };
-}
+// Re-export types for backward compatibility
+export type { ColorScale, ColorScaleData, ColorShade, WCAGGrade };
 
 // Tailwind shade numbers map to scale numbers (0-100)
 // 50 = 95 (lightest), 950 = 5 (darkest)
@@ -133,12 +108,25 @@ function computeScaleLightness(scaleValue: number, backgroundLuminance: number =
   return labLightnessToOkhslLightness(labLightness);
 }
 
-export function generateColorScale(
+export function generateColorScaleData(
   keyColor: string, 
   scaleName: string = 'primary',
   hueShift: number = 0,
   chromaShift: number = 0
+): ColorScaleData {
+  return {
+    id: `scale-${Date.now()}`,
+    name: scaleName,
+    keyColor,
+    hueShift,
+    chromaShift,
+  };
+}
+
+export function generateColorScale(
+  scaleData: ColorScaleData
 ): ColorScale {
+  const { keyColor, hueShift = 0, chromaShift = 0 } = scaleData;
   const baseColor = new Color(keyColor);
   const white = new Color('#ffffff');
   const black = new Color('#000000');
@@ -207,17 +195,13 @@ export function generateColorScale(
   });
   
   return {
-    id: `scale-${Date.now()}`,
-    name: scaleName,
-    keyColor,
-    hueShift,
-    chromaShift,
+    ...scaleData,
     shades,
   };
 }
 
 export function exportAsCSSVariables(
-  scales: ColorScale[],
+  scales: (ColorScale | ColorScaleData)[],
   prefix: string = '',
   useThemeBlock: boolean = false
 ): string {
@@ -226,9 +210,18 @@ export function exportAsCSSVariables(
   scales.forEach(scale => {
     const scalePrefix = prefix ? `${prefix}-${scale.name}` : scale.name;
     
-    Object.entries(scale.shades).forEach(([shade, color]) => {
-      css += `  --color-${scalePrefix}-${shade}: ${color.hex};\n`;
-    });
+    // If scale has shades (full ColorScale), use them directly
+    if ('shades' in scale && scale.shades) {
+      Object.entries(scale.shades).forEach(([shade, color]) => {
+        css += `  --color-${scalePrefix}-${shade}: ${color.hex};\n`;
+      });
+    } else {
+      // If scale is ColorScaleData, generate the full scale first
+      const fullScale = generateColorScale(scale as ColorScaleData);
+      Object.entries(fullScale.shades).forEach(([shade, color]) => {
+        css += `  --color-${scalePrefix}-${shade}: ${color.hex};\n`;
+      });
+    }
     
     css += '\n';
   });

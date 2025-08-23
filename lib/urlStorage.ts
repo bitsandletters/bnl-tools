@@ -15,21 +15,33 @@ export interface AppState {
   useThemeBlock: boolean;
 }
 
+const defaultState: AppState = {
+  scales: [],
+  prefix: '',
+  useThemeBlock: false,
+};
+
 export const urlStorage = {
   // Get the current state from URL hash
   getState(): AppState {
+
     if (typeof window === 'undefined') {
-      return { scales: [], prefix: '', useThemeBlock: false };
+      return defaultState;
     }
 
     try {
       const hash = window.location.hash.slice(1); // Remove the # symbol
+      console.log('hash', hash);
+
       if (!hash) {
-        return { scales: [], prefix: '', useThemeBlock: false };
+        console.log('No hash found');
+        this.saveState(defaultState);
+        return defaultState;
       }
 
       const decompressed = LZString.decompressFromEncodedURIComponent(hash);
       if (!decompressed) {
+        console.log('No decompressed data found');
         return { scales: [], prefix: '', useThemeBlock: false };
       }
 

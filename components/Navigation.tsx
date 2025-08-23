@@ -25,17 +25,16 @@ export default function Navigation() {
           {/* Logo and Brand */}
           <div className="flex items-center space-x-4">
             <Link href="/" className="flex items-center space-x-2">
-              <div className="flex items-center">
-                <span className="text-xl font-bold" style={{ color: 'var(--app-color-text-loud)' }}>
-                  Bits
+              <div className="flex items-center text-2xl">
+                <svg viewBox='0 0 273 273' className='size-[1.375em]'>
+                <path
+                  d="M136.3 0c103.5 0 136.1 35.4 136.1 136 0 100.8-32.7 136.2-136 136.2C32.8 272.2.1 236.8.1 136 .2 35.4 33 0 136.3 0ZM113 38.5c-16.2 0-21.4 5.6-21.4 21.4 0 9.3-7.4 16.7-16.7 16.7-16.3 0-21.4 5.6-21.4 21.4 0 15.8 5.2 21.5 21.4 21.5a16.7 16.7 0 1 1 0 33.3c-16.3 0-21.4 5.6-21.4 21.4 0 15.8 5.2 21.4 21.4 21.4 9.2 0 16.7 7.5 16.7 16.7 0 15.8 5.2 21.4 21.5 21.4 16.2 0 21.4-5.6 21.4-21.4a16.7 16.7 0 1 1 33.3 0c0 15.8 5.2 21.4 21.4 21.4 16.3 0 21.5-5.6 21.5-21.4 0-15.9-5.2-21.4-21.4-21.4a16.7 16.7 0 0 1 0-33.4c16.2 0 21.4-5.5 21.4-21.4 0-15.9-5.2-21.4-21.4-21.4-16.3 0-21.5 5.6-21.5 21.4a16.7 16.7 0 1 1-33.3 0c0-15.8-5.2-21.4-21.5-21.4a16.7 16.7 0 1 1 0-33.3h38.5c16.3 0 21.4-5.6 21.4-21.5 0-15.8-5-21.4-21.4-21.4H113Zm0 119a16.7 16.7 0 1 1-16.7 16.7c0-9.2 7.5-16.7 16.8-16.7Z"
+                  fill="currentColor"></path>
+                </svg>
+                <span className='sr-only'>
+                  Bits&amp;Letters
                 </span>
-                <span className="text-xl font-bold mx-1" style={{ color: 'var(--app-color-primary)' }}>
-                  &
-                </span>
-                <span className="text-xl font-bold" style={{ color: 'var(--app-color-text-loud)' }}>
-                  Letters
-                </span>
-                <span className="text-sm font-medium ml-2" style={{ color: 'var(--app-color-text-quiet)' }}>
+                <span className="font-stringer font-light ml-2">
                   Tools
                 </span>
               </div>
@@ -98,7 +97,7 @@ export default function Navigation() {
           {/* External Links */}
           <div className="flex items-center space-x-4">
             <a
-              href="https://bitsandletters.com"
+              href="https://www.bitsandletters.com"
               target="_blank"
               rel="noopener noreferrer"
               className="text-sm font-medium transition-colors"

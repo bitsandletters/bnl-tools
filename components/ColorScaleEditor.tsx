@@ -4,33 +4,109 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { ColorScale, generateColorScale, getWCAGGradeString, parseColor } from '@/lib/colorUtils';
+import { generateColorScaleData, getWCAGGradeString, parseColor } from '@/lib/colorUtils';
+import { ColorScale, ColorScaleData } from '@/lib/types';
 import ColorSwatch from './ColorSwatch';
+import { Button } from '@/components/catalyst/button';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faSliders, faTrash } from '@awesome.me/kit-dafe0a6e6d/icons/sharp/regular';
+import { Popover, PopoverButton, PopoverPanel } from '@headlessui/react'
 
 interface ColorScaleEditorProps {
   scale: ColorScale;
-  onUpdate: (scale: ColorScale) => void;
+  onUpdate: (scale: ColorScaleData) => void;
   onRemove: () => void;
 }
 
+interface ColorScaleRecipePopoverProps {
+  scale: ColorScale;
+  onUpdate: (scale: ColorScaleData) => void;
+}
+
+function ColorScaleRecipePopover({ scale, onUpdate }: ColorScaleRecipePopoverProps) {
+  return (
+    <Popover>
+      <PopoverButton>
+        <FontAwesomeIcon icon={faSliders} data-slot="icon" />
+        <span>Settings</span>
+      </PopoverButton>
+      <PopoverPanel anchor="bottom end" className="bg-bg-primary shadow-lg">
+        <div className="mb-6 p-4 rounded-lg" style={{ backgroundColor: 'var(--app-color-bg-tertiary)' }}>
+          <div className="space-y-3">
+            <div>
+              <label className="flex justify-between text-xs mb-1 text-text-normal" >
+                <span>Hue Shift (warmer → cooler gradient)</span>
+                <span>{(scale.hueShift || 0) > 0 ? '+' : ''}{scale.hueShift || 0}°</span>
+              </label>
+              <input
+                type="range"
+                min="-60"
+                max="60"
+                step="1"
+                value={scale.hueShift || 0}
+                onChange={(e) => {
+                  const newScaleData = generateColorScaleData(scale.keyColor, scale.name, Number(e.target.value), scale.chromaShift || 0);
+                  onUpdate({ ...newScaleData, id: scale.id });
+                }}
+                className="w-full"
+              />
+              <div className="flex justify-between text-xs mt-1" style={{ color: 'var(--app-color-text-muted)' }}>
+                <span>← Cooler lights</span>
+                <span>Warmer lights →</span>
+              </div>
+            </div>
+            <div>
+              <label className="flex justify-between text-xs mb-1" style={{ color: 'var(--app-color-text-normal)' }}>
+                <span>Chroma Shift (vibrant → muted gradient)</span>
+                <span>{(scale.chromaShift || 0) > 0 ? '+' : ''}{scale.chromaShift || 0}</span>
+              </label>
+              <input
+                type="range"
+                min="-10"
+                max="10"
+                step="0.2"
+                value={scale.chromaShift || 0}
+                onChange={(e) => {
+                  const newScaleData = generateColorScaleData(scale.keyColor, scale.name, scale.hueShift || 0, Number(e.target.value));
+                  onUpdate({ ...newScaleData, id: scale.id });
+                }}
+                className="w-full"
+              />
+              <div className="flex justify-between text-xs mt-1" style={{ color: 'var(--app-color-text-muted)' }}>
+                <span>← Muted darks</span>
+                <span>Vibrant darks →</span>
+              </div>
+            </div>
+            {((scale.hueShift || 0) !== 0 || (scale.chromaShift || 0) !== 0) && (
+              <button
+                onClick={() => {
+                  const newScaleData = generateColorScaleData(scale.keyColor, scale.name, 0, 0);
+                  onUpdate({ ...newScaleData, id: scale.id });
+                }}
+                className="w-full px-3 py-1 text-sm border rounded" style={{ color: 'var(--app-color-text-quiet)', borderColor: 'var(--app-color-border-normal)' }} onMouseEnter={(e) => e.currentTarget.style.color = 'var(--app-color-text-normal)'} onMouseLeave={(e) => e.currentTarget.style.color = 'var(--app-color-text-quiet)'}
+              >
+                Reset Shifts
+              </button>
+            )}
+          </div>
+        </div>
+      </PopoverPanel>
+    </Popover>
+  );
+}
+
 export default function ColorScaleEditor({ scale, onUpdate, onRemove }: ColorScaleEditorProps) {
-  const [hueShift, setHueShift] = useState(scale.hueShift || 0);
-  const [chromaShift, setChromaShift] = useState(scale.chromaShift || 0);
   const [copiedHex, setCopiedHex] = useState<string | null>(null);
   const [hoveredShade, setHoveredShade] = useState<string | null>(null);
   const [keyColorInput, setKeyColorInput] = useState(scale.keyColor);
   const [editingName, setEditingName] = useState(false);
   const [nameInput, setNameInput] = useState(scale.name);
 
-  // Auto-apply changes when shift sliders move
+  // Update local state when scale changes (for undo/redo)
   useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      const newScale = generateColorScale(scale.keyColor, scale.name, hueShift, chromaShift);
-      onUpdate({ ...newScale, id: scale.id });
-    }, 100); // Small debounce to avoid too many updates
-
-    return () => clearTimeout(timeoutId);
-  }, [hueShift, chromaShift]);
+    setKeyColorInput(scale.keyColor);
+    setNameInput(scale.name);
+  }, [scale.keyColor, scale.name]);
 
   const copyHex = (hex: string, shade: string) => {
     navigator.clipboard.writeText(hex);
@@ -42,14 +118,20 @@ export default function ColorScaleEditor({ scale, onUpdate, onRemove }: ColorSca
     const parsedColor = parseColor(newColor);
     if (parsedColor) {
       setKeyColorInput(parsedColor);
-      const newScale = generateColorScale(parsedColor, scale.name, hueShift, chromaShift);
-      onUpdate({ ...newScale, id: scale.id });
+      const newScaleData = generateColorScaleData(parsedColor, scale.name, scale.hueShift || 0, scale.chromaShift || 0);
+      onUpdate({ ...newScaleData, id: scale.id });
     }
   };
 
   const handleNameChange = () => {
     if (nameInput.trim()) {
-      onUpdate({ ...scale, name: nameInput.trim() });
+      onUpdate({ 
+        id: scale.id,
+        name: nameInput.trim(),
+        keyColor: scale.keyColor,
+        hueShift: scale.hueShift,
+        chromaShift: scale.chromaShift,
+      });
       setEditingName(false);
     } else {
       setNameInput(scale.name);
@@ -96,90 +178,18 @@ export default function ColorScaleEditor({ scale, onUpdate, onRemove }: ColorSca
                   className="w-8 h-8 border rounded cursor-pointer" style={{ borderColor: 'var(--app-color-border-normal)' }}
                   title="Pick a color"
                 />
-                <input
-                  type="text"
-                  value={keyColorInput}
-                  onChange={(e) => {
-                    setKeyColorInput(e.target.value);
-                    handleKeyColorChange(e.target.value);
-                  }}
-                  className="px-2 py-1 text-sm border rounded focus:outline-none focus:ring-2 w-28" style={{ color: 'var(--app-color-text-inputs)', borderColor: 'var(--app-color-border-normal)', backgroundColor: 'var(--app-color-bg-secondary)' }}
-                  placeholder="#000000"
-                />
               </div>
-              <span className="text-sm" style={{ color: 'var(--app-color-text-muted)' }}>Key Color</span>
             </div>
           </div>
-          <ColorSwatch
-            color={scale.keyColor}
-            label="Current"
-            size="lg"
-            onColorCopy={() => {}}
-          />
         </div>
-        <button
+        <ColorScaleRecipePopover scale={scale} onUpdate={onUpdate} />
+        <Button
+          plain
           onClick={onRemove}
-          className="px-4 py-2 text-white rounded-md transition-colors" style={{ backgroundColor: 'var(--app-color-danger)' }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--app-color-danger-hover)'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'var(--app-color-danger)'}
         >
+          <FontAwesomeIcon icon={faTrash} data-slot="icon" />
           Remove
-        </button>
-      </div>
-
-
-      {/* Scale Generation Recipe */}
-      <div className="mb-6 p-4 rounded-lg" style={{ backgroundColor: 'var(--app-color-bg-tertiary)' }}>
-        <h4 className="text-sm font-semibold mb-3" style={{ color: 'var(--app-color-text-loud)' }}>Scale Generation Recipe</h4>
-        <div className="space-y-3">
-          <div>
-            <label className="flex justify-between text-xs mb-1" style={{ color: 'var(--app-color-text-normal)' }}>
-              <span>Hue Shift (warmer → cooler gradient)</span>
-              <span>{hueShift > 0 ? '+' : ''}{hueShift}°</span>
-            </label>
-            <input
-              type="range"
-              min="-60"
-              max="60"
-              step="1"
-              value={hueShift}
-              onChange={(e) => setHueShift(Number(e.target.value))}
-              className="w-full"
-            />
-            <div className="flex justify-between text-xs mt-1" style={{ color: 'var(--app-color-text-muted)' }}>
-              <span>← Cooler lights</span>
-              <span>Warmer lights →</span>
-            </div>
-          </div>
-          <div>
-            <label className="flex justify-between text-xs mb-1" style={{ color: 'var(--app-color-text-normal)' }}>
-              <span>Chroma Shift (vibrant → muted gradient)</span>
-              <span>{chromaShift > 0 ? '+' : ''}{chromaShift}</span>
-            </label>
-            <input
-              type="range"
-              min="-10"
-              max="10"
-              step="0.2"
-              value={chromaShift}
-              onChange={(e) => setChromaShift(Number(e.target.value))}
-              className="w-full"
-            />
-            <div className="flex justify-between text-xs mt-1" style={{ color: 'var(--app-color-text-muted)' }}>
-              <span>← Muted darks</span>
-              <span>Vibrant darks →</span>
-            </div>
-          </div>
-          {(hueShift !== 0 || chromaShift !== 0) && (
-            <button
-              onClick={() => {
-                setHueShift(0);
-                setChromaShift(0);
-              }}
-              className="w-full px-3 py-1 text-sm border rounded" style={{ color: 'var(--app-color-text-quiet)', borderColor: 'var(--app-color-border-normal)' }} onMouseEnter={(e) => e.currentTarget.style.color = 'var(--app-color-text-normal)'} onMouseLeave={(e) => e.currentTarget.style.color = 'var(--app-color-text-quiet)'}
-            >
-              Reset Shifts
-            </button>
-          )}
-        </div>
+        </Button>
       </div>
       
       {/* Color Swatches */}

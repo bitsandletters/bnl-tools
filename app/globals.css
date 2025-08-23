@@ -3,6 +3,51 @@
 /* ABOUTME: Import brand fonts from private package */
 @import '@bitsandletters/brand-fonts/fonts.css';
 
+@theme {
+  --font-sans: 'GT Standard', system-ui, sans-serif;
+  --font-stringer: 'Stringer', serif;
+  --default-font-family: var(--font-sans);
+
+  --color-text-loud: var(--app-color-text-loud);
+  --color-text-normal: var(--app-color-text-normal);
+  --color-text-quiet: var(--app-color-text-quiet);
+  --color-text-muted: var(--app-color-text-muted);
+  
+  --color-text-inputs: var(--app-color-text-inputs);
+  --color-text-placeholder: var(--app-color-text-placeholder);
+
+  --color-text-link: var(--app-color-text-link);
+  --color-text-link-hover: var(--app-color-text-link-hover);
+  --color-text-link-active: var(--app-color-text-link-active);
+  --color-text-link-visited: var(--app-color-text-link-visited);
+
+  --color-primary: var(--app-color-primary);
+  --color-primary-hover: var(--app-color-primary-hover);
+
+  --color-secondary: var(--app-color-secondary);
+  --color-secondary-hover: var(--app-color-secondary-hover);
+
+  --color-success: var(--app-color-success);
+  --color-success-hover: var(--app-color-success-hover);
+
+  --color-danger: var(--app-color-danger);
+  --color-danger-hover: var(--app-color-danger-hover);
+
+  --color-warning: var(--app-color-warning);
+  --color-warning-bg: var(--app-color-warning-bg);
+
+  --color-surface: var(--app-color-bg-primary);
+  --color-surface-raised: var(--app-color-bg-secondary);
+  --color-surface-secondary: var(--app-color-bg-secondary);
+  --color-surface-tertiary: var(--app-color-bg-tertiary);
+
+  --color-border-normal: var(--app-color-border-normal);
+  --color-border-light: var(--app-color-border-light);
+  --color-border-dark: var(--app-color-border-dark);
+
+  --color-disabled: var(--app-color-disabled-text);
+}
+
 /* ABOUTME: Base styles for dark theme */
 @layer base {
   html {

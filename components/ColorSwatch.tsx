@@ -3,7 +3,8 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
+import { useFloating, offset, flip, shift, autoUpdate } from '@floating-ui/react';
 import Color from 'colorjs.io';
 import 'colorjs.io/fn';
 import { getWCAGGradeString, WCAGGrade } from '@/lib/colorUtils';
@@ -53,6 +54,16 @@ export default function ColorSwatch({
 }: ColorSwatchProps) {
   const [isHovered, setIsHovered] = useState(false);
   const [copied, setCopied] = useState(false);
+  const triggerRef = useRef<HTMLDivElement>(null);
+
+  const { refs, floatingStyles } = useFloating({
+    elements: {
+      reference: triggerRef.current,
+    },
+    placement: 'top',
+    middleware: [offset(8), flip(), shift()],
+    whileElementsMounted: autoUpdate,
+  });
 
   const sizeClasses = {
     sm: 'w-10 h-10',
@@ -100,6 +111,7 @@ export default function ColorSwatch({
   return (
     <div className="relative group">
       <div
+        ref={triggerRef}
         className={`${sizeClasses[size]} rounded border-2 cursor-pointer transition-transform hover:scale-105 ${className}`}
         style={{ backgroundColor: color, borderColor: 'var(--app-color-border-normal)' }}
         onClick={handleClick}
@@ -116,7 +128,11 @@ export default function ColorSwatch({
       
       {/* Detailed overlay */}
       {isHovered && colorData && (
-        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 p-3 bg-zinc-900 text-white text-xs rounded-lg shadow-lg z-50 w-64 pointer-events-none">
+        <div
+          ref={refs.setFloating}
+          style={floatingStyles}
+          className="p-3 bg-zinc-900 text-white text-xs rounded-lg shadow-lg z-50 w-64 pointer-events-none"
+        >
           <div className="space-y-2">
             <div className="font-semibold text-sm border-b border-zinc-700 pb-1">
               {colorData.hex}
@@ -174,9 +190,6 @@ export default function ColorSwatch({
             <div className="text-zinc-400 pt-1 border-t border-zinc-700">
               OKHsl: {Math.round(colorData.okhsl.h)}° {Math.round(colorData.okhsl.s * 100)}% {Math.round(colorData.okhsl.l * 100)}%
             </div>
-          </div>
-          <div className="absolute top-full left-1/2 transform -translate-x-1/2 -mt-1">
-            <div className="border-4 border-transparent border-t-zinc-900"></div>
           </div>
         </div>
       )}
