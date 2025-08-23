@@ -1,0 +1,10 @@
+{
+  "recommendations": [
+    "figma.figma-vscode-extension",
+    "unifiedjs.vscode-mdx",
+    "esbenp.prettier-vscode",
+    "bradlc.vscode-tailwindcss",
+    "dbaeumer.vscode-eslint",
+  ],
+  "unwantedRecommendations": []
+}

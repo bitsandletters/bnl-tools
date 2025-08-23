@@ -1,0 +1,15 @@
+{
+  "explorer.excludeGitIgnore": false,
+  "files.exclude": {
+    "**/.next": true,
+    "**/.turbo": true,
+    "**/.vercel": true,
+    "**/node_modules": true,
+    "**/.idea": true,
+  },
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/bower_components": true,
+    "**/*.code-search": true
+  }
+}
