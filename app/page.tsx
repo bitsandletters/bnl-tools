@@ -21,10 +21,14 @@ const tools = [
 export default function HomePage() {
   const router = useRouter();
 
-  // Redirect to color-scales if there's URL hash data (for backward compatibility)
+  // Redirect to color-scales if there's URL state (query or hash)
   useEffect(() => {
-    if (typeof window !== 'undefined' && window.location.hash) {
-      router.replace('/color-scales' + window.location.hash);
+    if (typeof window !== 'undefined') {
+      const hasQuery = window.location.search && window.location.search.length > 1;
+      const hasHash = window.location.hash && window.location.hash.length > 1;
+      if (hasQuery || hasHash) {
+        router.replace('/color-scales' + (hasQuery ? window.location.search : '') + (hasHash ? window.location.hash : ''));
+      }
     }
   }, [router]);
 

@@ -85,6 +85,140 @@ class HashStorage implements StateStorage {
   }
 }
 
+// New: Query string storage adapter for Zustand
+class QueryStringStorage implements StateStorage {
+  private parseScaleParam(param: string, index: number): ColorScaleData | null {
+    try {
+      const firstColon = param.indexOf(':');
+      if (firstColon === -1) return null;
+
+      const rawName = param.slice(0, firstColon);
+      const name = decodeURIComponent(rawName);
+
+      const rest = param.slice(firstColon + 1);
+      const [colorPart, ...restParts] = rest.split(',');
+      const keyColor = decodeURIComponent(colorPart || '').trim();
+
+      if (!keyColor) return null;
+
+      let hueShift = 0;
+      let chromaShift = 0;
+
+      for (const part of restParts) {
+        const sep = part.indexOf(':');
+        if (sep === -1) continue;
+        const k = part.slice(0, sep).trim();
+        const v = part.slice(sep + 1).trim();
+        if (k === 'h') {
+          const n = Number(v);
+          if (!Number.isNaN(n)) hueShift = n;
+        } else if (k === 'c') {
+          const n = Number(v);
+          if (!Number.isNaN(n)) chromaShift = n;
+        }
+      }
+
+      // Use existing helper to ensure consistent data shape (generates id)
+      return generateColorScaleData(keyColor, name, hueShift, chromaShift);
+    } catch {
+      return null;
+    }
+  }
+
+  private serializeScaleParam(scale: ColorScaleData): string {
+    const name = encodeURIComponent(scale.name);
+    const color = encodeURIComponent(scale.keyColor);
+    const parts: string[] = [`${name}:${color}`];
+    if (scale.hueShift && scale.hueShift !== 0) parts.push(`h:${scale.hueShift}`);
+    if (scale.chromaShift && scale.chromaShift !== 0) parts.push(`c:${scale.chromaShift}`);
+    return parts.join(',');
+  }
+
+  async getItem(name: string): Promise<string | null> {
+    if (typeof window === 'undefined') {
+      return null;
+    }
+
+    const search = window.location.search;
+    const params = new URLSearchParams(search);
+    const sParams = params.getAll('s');
+
+    if (sParams.length > 0 || params.has('prefix') || params.has('useThemeBlock') || params.has('output')) {
+      const scales: ColorScaleData[] = [];
+      sParams.forEach((p, i) => {
+        const parsed = this.parseScaleParam(p, i);
+        if (parsed) scales.push(parsed);
+      });
+
+      const prefix = params.get('prefix') || '';
+      const output = params.get('output');
+      const useThemeBlockParam = params.get('useThemeBlock');
+      // Priority: explicit output setting, else boolean alias
+      const useThemeBlock = output ? (output === 'tailwind') : (useThemeBlockParam === '1' || useThemeBlockParam === 'true');
+
+      const state: AppState = {
+        scales,
+        prefix,
+        useThemeBlock,
+      };
+
+      try {
+        return JSON.stringify(state);
+      } catch {
+        return null;
+      }
+    }
+
+    // Fallback: support legacy hash-based compressed state if present
+    const hash = window.location.hash.slice(1);
+    if (hash) {
+      try {
+        const decompressed = LZString.decompressFromEncodedURIComponent(hash);
+        return decompressed ?? null;
+      } catch {
+        return null;
+      }
+    }
+
+    return null;
+  }
+
+  async setItem(name: string, value: string): Promise<void> {
+    if (typeof window === 'undefined') return;
+
+    try {
+      const parsed = JSON.parse(value) as AppState;
+      const params = new URLSearchParams();
+
+      (parsed.scales || []).forEach((scale) => {
+        params.append('s', this.serializeScaleParam(scale));
+      });
+
+      if (parsed.prefix) {
+        params.set('prefix', parsed.prefix);
+      }
+
+      // Preferred new param: output
+      params.set('output', parsed.useThemeBlock ? 'tailwind' : 'root');
+
+      const query = params.toString();
+      const newUrl = window.location.pathname + (query ? `?${query}` : '');
+      window.history.replaceState(null, '', newUrl);
+    } catch (error) {
+      console.error('Failed to save to query string:', error);
+    }
+  }
+
+  async removeItem(name: string): Promise<void> {
+    if (typeof window === 'undefined') return;
+    try {
+      window.history.replaceState(null, '', window.location.pathname);
+    } catch (error) {
+      console.error('Failed to clear query string:', error);
+    }
+  }
+}
+
 const defaultState: AppState = {
   scales: [],
   prefix: '',
@@ -223,7 +357,7 @@ export const useColorScaleStore = create<ColorScaleStore>()(
       }),
       {
         name: 'color-scale-generator',
-        storage: createJSONStorage(() => new HashStorage()),
+        storage: createJSONStorage(() => new QueryStringStorage()),
         // Only persist the core state, not the history
         partialize: (state) => ({
           scales: state.scales,
@@ -248,6 +382,27 @@ export const useColorScaleStore = create<ColorScaleStore>()(
     )
   )
 );
+
+// Listen for URL popstate changes (browser back/forward) for query string format
+if (typeof window !== 'undefined') {
+  const handlePopState = () => {
+    const store = useColorScaleStore.getState();
+    const loader = new QueryStringStorage();
+    loader.getItem('color-scale-generator').then((json) => {
+      if (json) {
+        try {
+          const newState = JSON.parse(json) as AppState;
+          store._setHistoryIndex(0);
+          store._addToHistory(newState);
+        } catch (error) {
+          console.error('Failed to parse query state:', error);
+        }
+      }
+    });
+  };
+
+  window.addEventListener('popstate', handlePopState);
+}
 
 // Listen for URL hash changes (browser back/forward)
 if (typeof window !== 'undefined') {

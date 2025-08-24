@@ -45,7 +45,9 @@ export default function ColorScaleGenerator() {
       setIsAppReady(true);
     } else {
       // No existing scales, check if we should add a starter
-      const hasUrlState = window.location.hash && window.location.hash.length > 1;
+      const hasQuery = typeof window !== 'undefined' && (window.location.search.length > 1);
+      const hasHash = typeof window !== 'undefined' && (window.location.hash && window.location.hash.length > 1);
+      const hasUrlState = hasQuery || hasHash;
       if (!hasUrlState) {
         // Add a starter color scale
         addColorScale();
