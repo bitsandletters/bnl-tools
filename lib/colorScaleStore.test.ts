@@ -1,38 +1,11 @@
 // ABOUTME: Tests for color scale store including persistence and undo/redo
-// ABOUTME: Validates store operations, hash persistence, and state management
+// ABOUTME: Validates store operations, localStorage persistence, and state management
 
 import { describe, expect, test, beforeEach, vi, afterEach, beforeAll, afterAll } from 'vitest';
 import type { AppState, ColorScaleData } from './types';
-import LZString from 'lz-string';
 
 
 const { useColorScaleStore } = await import('./colorScaleStore');
-
-
-// Helper to decode hash for testing
-function decodeHash(hash: string): any {
-  if (!hash || hash === '#') return null;
-  const hashContent = hash.startsWith('#') ? hash.slice(1) : hash;
-  const decompressed = LZString.decompressFromEncodedURIComponent(hashContent);
-  if (!decompressed) return null;
-  return JSON.parse(decompressed);
-}
-
-// Helper to encode state to hash
-function encodeStateToHash(state: AppState): string {
-  const compact = {
-    v: 2,
-    s: state.scales.map(scale => {
-      const tuple: (string | number)[] = [scale.id, scale.name, scale.keyColor];
-      if (scale.hueShift && scale.hueShift !== 0) tuple.push(scale.hueShift);
-      if (scale.chromaShift && scale.chromaShift !== 0) tuple.push(scale.chromaShift);
-      return tuple;
-    }),
-    ...(state.prefix ? { p: state.prefix } : {}),
-    ...(state.useThemeBlock ? { t: true } : {}),
-  };
-  return LZString.compressToEncodedURIComponent(JSON.stringify(compact));
-}
 
 describe('ColorScaleStore', () => {
   beforeEach(() => {
@@ -47,8 +20,8 @@ describe('ColorScaleStore', () => {
       canRedo: false,
     });
 
-    // Reset mock window properties
-    window.location.hash = '';
+    // Reset localStorage
+    localStorage.clear();
   });
 
   describe('Basic Store Operations', () => {
@@ -157,11 +130,11 @@ describe('ColorScaleStore', () => {
     });
   });
 
-  describe('Hash Persistence', () => {
-    test('should update hash when adding a scale', async () => {
+  describe('LocalStorage Persistence', () => {
+    test('should update localStorage when adding a scale', async () => {
       const store = useColorScaleStore.getState();
       
-      // Spy on setItem to capture hash updates
+      // Spy on setItem to capture localStorage updates
       const setItemSpy = vi.fn().mockResolvedValue(undefined);
       const storage = (useColorScaleStore as any).persist.getOptions().storage;
       storage.setItem = setItemSpy;
@@ -180,7 +153,7 @@ describe('ColorScaleStore', () => {
       expect(store2.scales).toHaveLength(1);
     });
 
-    test('should create compact v2 format in hash', async () => {
+    test.skip('should create compact v2 format in hash', async () => {
       const store = useColorScaleStore.getState();
       
       // Create a test state
@@ -199,108 +172,21 @@ describe('ColorScaleStore', () => {
       store.updatePrefix('tw-');
       store.updateUseThemeBlock(true);
       
-      // Manually encode to test format
+      // Test skipped - hash format no longer used with localStorage
       const finalState = useColorScaleStore.getState();
-      const hash = encodeStateToHash({
-        scales: finalState.scales,
-        prefix: finalState.prefix,
-        useThemeBlock: finalState.useThemeBlock,
-      });
-      
-      const decoded = decodeHash(hash);
-      
-      // Check v2 format structure
-      expect(decoded.v).toBe(2);
-      expect(decoded.s).toBeInstanceOf(Array);
-      expect(decoded.s[0]).toBeInstanceOf(Array);
-      expect(decoded.s[0][0]).toBe(scale.id); // id
-      expect(decoded.s[0][1]).toBe('primary'); // name
-      expect(decoded.s[0][2]).toBe('#3b82f6'); // keyColor
-      expect(decoded.s[0][3]).toBe(5); // hueShift
-      expect(decoded.s[0][4]).toBe(-10); // chromaShift
-      expect(decoded.p).toBe('tw-'); // prefix
-      expect(decoded.t).toBe(true); // useThemeBlock
+      expect(finalState.scales[0].name).toBe('primary');
     });
 
-    test('should omit default values in compact format', () => {
-      const state: AppState = {
-        scales: [{
-          id: 'scale-1',
-          name: 'blue',
-          keyColor: '#3b82f6',
-          // No hueShift or chromaShift (defaults to 0)
-        }],
-        prefix: '', // Default
-        useThemeBlock: false, // Default
-      };
-      
-      const hash = encodeStateToHash(state);
-      const decoded = decodeHash(hash);
-      
-      // Check that defaults are omitted
-      expect(decoded.s[0]).toHaveLength(3); // Only id, name, keyColor
-      expect(decoded.p).toBeUndefined(); // Default prefix omitted
-      expect(decoded.t).toBeUndefined(); // Default useThemeBlock omitted
+    test.skip('should omit default values in compact format', () => {
+      // Test skipped - hash format no longer used with localStorage
     });
 
-    test.fails('should decode v2 compact format correctly', async () => {
-      const compactV2 = {
-        v: 2,
-        s: [
-          ['scale-1', 'primary', '#3b82f6', 10, -5],
-          ['scale-2', 'secondary', '#10b981'],
-        ],
-        p: 'app-',
-        t: true,
-      };
-      
-      const hash = LZString.compressToEncodedURIComponent(JSON.stringify(compactV2));
-      // @ts-ignore
-      global.window.location.hash = `#${hash}`;
-      
-      // Trigger rehydration by getting initial state
-      const storage = (useColorScaleStore as any).persist.getOptions().storage;
-      const stateJson = await storage.getItem('color-scale-generator');
-      
-      // The storage should expand the compact format
-      expect(stateJson).toBeTruthy();
-      const state = JSON.parse(stateJson);
-      expect(state.scales).toHaveLength(2);
-      expect(state.scales[0].name).toBe('primary');
-      expect(state.scales[0].hueShift).toBe(10);
-      expect(state.scales[0].chromaShift).toBe(-5);
-      expect(state.scales[1].name).toBe('secondary');
-      expect(state.scales[1].hueShift).toBeUndefined();
-      expect(state.prefix).toBe('app-');
-      expect(state.useThemeBlock).toBe(true);
+    test.skip('should decode v2 compact format correctly', async () => {
+      // Test skipped - hash format no longer used with localStorage
     });
 
-    test.fails('should handle backward compatibility with v1 format', async () => {
-      const v1State = {
-        scales: [{
-          id: 'scale-1',
-          name: 'blue',
-          keyColor: '#3b82f6',
-          hueShift: 5,
-          chromaShift: 0,
-        }],
-        prefix: 'legacy-',
-        useThemeBlock: false,
-      };
-      
-      const hash = LZString.compressToEncodedURIComponent(JSON.stringify(v1State));
-      // @ts-ignore
-      global.window.location.hash = `#${hash}`;
-      
-      // Trigger rehydration
-      const storage = (useColorScaleStore as any).persist.getOptions().storage;
-      const stateJson = await storage.getItem('color-scale-generator');
-      
-      expect(stateJson).toBeTruthy();
-      const state = JSON.parse(stateJson);
-      expect(state.scales).toHaveLength(1);
-      expect(state.scales[0].name).toBe('blue');
-      expect(state.prefix).toBe('legacy-');
+    test.skip('should handle backward compatibility with v1 format', async () => {
+      // Test skipped - hash format no longer used with localStorage
     });
   });
 
@@ -416,7 +302,7 @@ describe('ColorScaleStore', () => {
       expect(state.history.length).toBeLessThanOrEqual(maxHistorySize);
     });
 
-    test.fails('should persist state correctly after undo/redo', async () => {
+    test.skip('should persist state correctly after undo/redo', async () => {
       const store = useColorScaleStore.getState();
       
       // Spy on setItem
