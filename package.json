@@ -7,9 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "test": "dotenv vitest run",
-    "test:ui": "dotenv vitest run --ui",
-    "test:coverage": "dotenv vitest run --coverage"
+    "test": "vitest run",
+    "test:ui": "vitest run --ui",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "@awesome.me/kit-dafe0a6e6d": "^1.0.4",
