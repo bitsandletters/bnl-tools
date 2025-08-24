@@ -3,6 +3,7 @@
 
 import Color from 'colorjs.io';
 import 'colorjs.io/fn';
+import { nanoid } from 'nanoid'
 import { ColorScale, ColorScaleData, ColorShade, WCAGGrade } from './types';
 
 // Re-export types for backward compatibility
@@ -115,7 +116,7 @@ export function generateColorScaleData(
   chromaShift: number = 0
 ): ColorScaleData {
   return {
-    id: `scale-${Date.now()}`,
+    id: nanoid(10),
     name: scaleName,
     keyColor,
     hueShift,

@@ -3,10 +3,12 @@
 
 import { create } from 'zustand';
 import { subscribeWithSelector } from 'zustand/middleware';
-import { persist, createJSONStorage, StateStorage } from 'zustand/middleware';
+import { persist, createJSONStorage } from 'zustand/middleware';
 import LZString from 'lz-string';
 import { generateColorScale, generateColorScaleData } from './colorUtils';
 import { AppState, ColorScale, ColorScaleData } from './types';
+
+import { HashStorage } from './hashStorage';
 
 export interface ColorScaleStore extends AppState {
   // Actions
@@ -31,28 +33,6 @@ export interface ColorScaleStore extends AppState {
   // Internal
   _addToHistory: (state: AppState) => void;
   _setHistoryIndex: (index: number) => void;
-}
-
-// Helper: compact (v2) encode/decode for shorter hashes while remaining backward-compatible
-// Compact format:
-// { v: 2, s: [ [id, name, keyColor, hueShift?, chromaShift?], ... ], p?: string, t?: boolean }
-function compactAppState(state: AppState): { v: 2; s: (string | number)[][]; p?: string; t?: boolean } {
-  const tuples: (string | number)[][] = (state.scales || []).map((scale) => {
-    const tuple: (string | number)[] = [scale.id, scale.name, scale.keyColor];
-    const hue = scale.hueShift || 0;
-    const chr = scale.chromaShift || 0;
-    if (hue !== 0 || chr !== 0) tuple.push(hue);
-    if (chr !== 0) tuple.push(chr);
-    return tuple;
-  });
-
-  const result: { v: 2; s: (string | number)[][]; p?: string; t?: boolean } = {
-    v: 2,
-    s: tuples,
-  };
-  if (state.prefix) result.p = state.prefix;
-  if (state.useThemeBlock) result.t = true;
-  return result;
 }
 
 function expandAppState(compact: any): AppState {
@@ -95,64 +75,6 @@ function decodeDecompressedToFullJsonString(raw: string): string | null {
   }
 }
 
-// Hash storage adapter for Zustand
-class HashStorage implements StateStorage {
-  getItem(name: string): Promise<string | null> {
-    if (typeof window === 'undefined') {
-      return Promise.resolve(null);
-    }
-    
-    const hash = window.location.hash.slice(1);
-    if (!hash) {
-      return Promise.resolve(null);
-    }
-    
-    try {
-      const decompressed = LZString.decompressFromEncodedURIComponent(hash);
-      if (!decompressed) return Promise.resolve(null);
-      const fullJson = decodeDecompressedToFullJsonString(decompressed);
-      return Promise.resolve(fullJson);
-    } catch (error) {
-      console.error('Failed to decompress hash:', error);
-      return Promise.resolve(null);
-    }
-  }
-
-  setItem(name: string, value: string): Promise<void> {
-    if (typeof window === 'undefined') {
-      return Promise.resolve();
-    }
-    
-    try {
-      // Persist receives full JSON string; convert to compact v2 before compressing
-      const state: AppState = JSON.parse(value);
-      const compact = compactAppState(state);
-      const compactString = JSON.stringify(compact);
-      const compressed = LZString.compressToEncodedURIComponent(compactString);
-      const newUrl = window.location.pathname + (compressed ? `#${compressed}` : '');
-      window.history.replaceState(null, '', newUrl);
-    } catch (error) {
-      console.error('Failed to save to hash:', error);
-    }
-    
-    return Promise.resolve();
-  }
-
-  removeItem(name: string): Promise<void> {
-    if (typeof window === 'undefined') {
-      return Promise.resolve();
-    }
-    
-    try {
-      window.history.replaceState(null, '', window.location.pathname);
-    } catch (error) {
-      console.error('Failed to clear hash:', error);
-    }
-    
-    return Promise.resolve();
-  }
-}
-
 const defaultState: AppState = {
   scales: [],
   prefix: '',
@@ -177,59 +99,47 @@ export const useColorScaleStore = create<ColorScaleStore>()(
           const scaleName = `scale-${scales.length + 1}`;
           
           const newScale = generateColorScaleData(defaultColor, scaleName);
-          const newState = {
-            ...state,
-            scales: [...(state.scales || []), newScale],
-          };
+          const newScales = [...(state.scales || []), newScale];
           
-          set(newState);
-          get()._addToHistory(newState);
+          set({ scales: newScales });
+          get()._addToHistory({ scales: newScales, prefix: state.prefix, useThemeBlock: state.useThemeBlock });
         },
 
         removeScale: (id: string) => {
           const state = get();
-          const newState = {
-            ...state,
-            scales: (state.scales || []).filter(scale => scale.id !== id),
-          };
+          const newScales = (state.scales || []).filter(scale => scale.id !== id);
           
-          set(newState);
-          get()._addToHistory(newState);
+          set({ scales: newScales });
+          get()._addToHistory({ scales: newScales, prefix: state.prefix, useThemeBlock: state.useThemeBlock });
         },
 
         updateScale: (updatedScale: ColorScaleData) => {
           const state = get();
-          const newState = {
-            ...state,
-            scales: (state.scales || []).map(scale => 
-              scale.id === updatedScale.id ? updatedScale : scale
-            ),
-          };
+          const newScales = (state.scales || []).map(scale => 
+            scale.id === updatedScale.id ? updatedScale : scale
+          );
           
-          set(newState);
-          get()._addToHistory(newState);
+          set({ scales: newScales });
+          get()._addToHistory({ scales: newScales, prefix: state.prefix, useThemeBlock: state.useThemeBlock });
         },
 
         updatePrefix: (prefix: string) => {
           const state = get();
-          const newState = { ...state, prefix };
           
-          set(newState);
-          get()._addToHistory(newState);
+          set({ prefix });
+          get()._addToHistory({ scales: state.scales, prefix, useThemeBlock: state.useThemeBlock });
         },
 
         updateUseThemeBlock: (useThemeBlock: boolean) => {
           const state = get();
-          const newState = { ...state, useThemeBlock };
           
-          set(newState);
-          get()._addToHistory(newState);
+          set({ useThemeBlock });
+          get()._addToHistory({ scales: state.scales, prefix: state.prefix, useThemeBlock });
         },
 
         clearAll: () => {
-          const newState = { ...defaultState };
-          set(newState);
-          get()._addToHistory(newState);
+          set({ scales: defaultState.scales, prefix: defaultState.prefix, useThemeBlock: defaultState.useThemeBlock });
+          get()._addToHistory(defaultState);
         },
 
         getFullScales: () => {
@@ -238,22 +148,34 @@ export const useColorScaleStore = create<ColorScaleStore>()(
         },
 
         undo: () => {
-          const { history, currentIndex, _setHistoryIndex } = get();
+          const { history, currentIndex } = get();
           if (currentIndex > 0) {
             const newIndex = currentIndex - 1;
             const previousState = history[newIndex];
-            set({ ...previousState, currentIndex: newIndex, canUndo: newIndex > 0, canRedo: newIndex < history.length - 1 });
-            _setHistoryIndex(newIndex);
+            set({ 
+              scales: previousState.scales,
+              prefix: previousState.prefix,
+              useThemeBlock: previousState.useThemeBlock,
+              currentIndex: newIndex,
+              canUndo: newIndex > 0,
+              canRedo: true
+            });
           }
         },
 
         redo: () => {
-          const { history, currentIndex, _setHistoryIndex } = get();
+          const { history, currentIndex } = get();
           if (currentIndex < history.length - 1) {
             const newIndex = currentIndex + 1;
             const nextState = history[newIndex];
-            set({ ...nextState, currentIndex: newIndex, canUndo: newIndex > 0, canRedo: newIndex < history.length - 1 });
-            _setHistoryIndex(newIndex);
+            set({ 
+              scales: nextState.scales,
+              prefix: nextState.prefix,
+              useThemeBlock: nextState.useThemeBlock,
+              currentIndex: newIndex,
+              canUndo: true,
+              canRedo: newIndex < history.length - 1
+            });
           }
         },
 
@@ -272,7 +194,6 @@ export const useColorScaleStore = create<ColorScaleStore>()(
           const newIndex = newHistory.length - 1;
           
           set({
-            ...state,
             history: newHistory,
             currentIndex: newIndex,
             canUndo: newIndex > 0,
